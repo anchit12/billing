@@ -1,0 +1,229 @@
+
+
+
+insert into customer_services1 values(101,'1','01-jul-2015','31-dec-2015','Active');
+update customer_services1 set service_current_status='Suspended' ,service_effective_date='25-aug-2015' where customer_id=101 and service_id='1';
+
+insert into customer_services1 values(101,'2','23-jul-2015','31-dec-2015','Active');
+
+update customer_services1 set service_current_status='Active' ,service_effective_date='25-sep-2015' where customer_id=101 and service_id='1';
+
+insert into customer_services1 values(102,'2','02-jul-2015','31-dec-2015','Active');
+
+insert into customer_services1 values(103,'2','03-jul-2015','31-dec-2015','Active');
+
+insert into customer_services1 values(104,'3','03-jul-2015','31-dec-2015','Active');
+
+
+
+insert into customer_services1 values(105,'1','04-jun-2015','31-dec-2015','Active');
+
+
+insert into  customer_services1 values(105,'3','06-jun-2015','31-dec-2015','Active');
+
+
+insert into customer_services1 values(106,'1','04-jul-2015','31-dec-2015','Active');
+
+
+insert into  customer_services1 values(106,'2','23-jun-2015','31-dec-2015','Active');
+
+
+
+
+
+create table customer1(customer_id number(10), billing_address_id number(10),customer_fname varchar2(30),customer_mobile_no number(15));
+insert into customer1 values(101,1,'akash',9238629884);
+insert into customer1 values(102,2,'venki',987654321);
+insert into customer1 values(103,1,'anchit',42387463);
+insert into customer1 values(104,2,'ramya',235623954);
+insert into customer1 values(105,1,'apoorva',82374283);
+insert into customer1 values(106,2,'pranjal',23956325);
+insert into customer1 values(107,1,'gaura',283476523);
+insert into customer1 values(108,2,'abhishek',37462434);
+insert into customer1 values(109,1,'mayank',23964442);
+insert into customer1 values(110,2,'alekh',329846342);
+
+create table customer_address1(address_id number(10),state_code varchar2(10));
+insert into customer_address1 values(1,'NY');
+insert into customer_address1 values(2,'AL');
+
+
+create table invoice_details(cust_id number(10),
+invoice_id int,
+bill_run_id int,
+charge_start_date date,
+charge_end_date date,
+service_id varchar2(1),
+prod_id varchar2(10),
+ps_desc varchar2(70),
+ps_quantity int,
+amount number(10,2),
+tax number(10,2),
+spl_prom number(10,2),
+bill_gen_date date,
+finalise varchar2(10)
+);
+
+create table product_services1(customer_id number(10), 
+service_id varchar2(1),
+product_id varchar2(10),
+product_start_date date,
+product_end_date date,
+product_quantity number(5),
+product_description varchar2(30));
+
+insert into product_services1 values(101,'1','V0001','23-jul-2015','21-dec-2015',1,'Freedom_essentials');
+insert into product_services1 values(101,'2','D0001','28-jul-2015','21-dec-2015',1,'Fios_data_10/10');
+insert into product_services1 values(102,'2','D0001','20-jul-2015','17-dec-2015',1,'Fios_data_10/10');
+insert into product_services1 values(102,'2','D0002','23-jul-2015','21-dec-2015',2,'Quanatm_Data_50/50');
+insert into product_services1 values(103,'2','D0001','23-jul-2015','21-dec-2015',1,'Fios_data_10/10');
+insert into product_services1 values(104,'3','T0001','29-jul-2015','21-dec-2015',1,'Custom_FIOS_TV');
+
+
+
+insert into product_services1 values(105,'1','V0002','23-jul-2015','21-dec-2015',1,'Dgital-voice');
+insert into product_services1 values(105,'3','T0001','28-jul-2015','21-dec-2015',1,'Custom_FIOS_TV');
+insert into product_services1 values(106,'1','V0001','30-aug-2015','17-dec-2015',1,'Freedom_Essentials');
+insert into product_services1 values(106,'1','V0002','23-jul-2015','21-dec-2015',1,'Digital_Voice');
+insert into product_services1 values(106,'2','D0002','20-aug-2015','21-dec-2015',1,'Quantam_Data_50/50');
+
+
+
+create table billing_details(cust_id int,
+bill_cycle_number int,
+last_billed_date date
+);
+
+insert into billing_details values(101,1,'23-jul-2015');
+insert into billing_details values(102,2,'20-jul-2015');
+insert into billing_details values(103,3,'25-jul-2015');
+insert into billing_details values(104,3,'22-jul-2015');
+insert into billing_details values(105,4,'24-jul-2015');
+insert into billing_details values(106,4,'25-jul-2015');
+
+
+
+
+create table billing_cycle(bill_run_id int,
+bill_date date,
+no_of_cust int
+);
+
+create table product_rates1(product_id varchar2(10),
+rate number(10,2),
+rate_start_date date,
+rate_end_date date,
+state_code varchar2(10));
+
+insert into product_rates1 values('T0001',300,'1-jan-2015','31-dec-2015','NY');
+insert into product_rates1 values('T0001',350,'1-jan-2015','31-dec-2015','AL');
+
+insert into product_rates1 values('V0001',550,'01-jan-2015','20-dec-2016','NY');
+insert into product_rates1 values('V0001',500,'01-jan-2015','31-dec-2016','AL');
+
+insert into product_rates1 values('V0002',700,'01-jan-2015','25-dec-2015','NY');
+insert into product_rates1 values('V0002',650,'01-jan-2015','31-dec-2015' ,'AL');
+
+insert into product_rates1 values('D0001',150,'01-jan-2015','31-dec-2015','NY');
+insert into product_rates1 values('D0001',120,'01-jan-2015','31-dec-2015','AL');
+
+insert into product_rates1 values('D0002',300,'01-jan-2015','31-dec-2015','NY');
+insert into product_rates1 values('D0002',600,'01-jan-2015','31-dec-2015','AL');
+
+
+
+create table payment (cust_id int,
+invoice_id int,
+current_bill_amount number(10,2),
+past_due number(10,2),
+amount_paid number(10,2),
+current_due number(10,2),
+status varchar2(10),
+bill_gen_date date,
+bill_pay_date varchar2(10)
+);
+
+create table CPA(cust_id number(10) ,          
+service_id varchar2(1),                                                                       
+service_start_date date ,                      
+service_end_date date,                       
+status varchar2(20),                          
+inst_create_date date);                      
+
+create table customer_services1(customer_id number(10),service_id varchar2(1),service_effective_date date,service_end_date date,service_current_status varchar2(20))
+
+----------------------------------
+drop table payment;
+drop table cpa;
+drop table billing_details;
+drop table billing_cycle;
+drop table invoice_details;
+drop table product_rates1;
+drop table product_services1;
+drop table customer1;
+drop table customer_address;
+
+
+ insert into payment values(101,110,1000,100,500,114,'paid','23-jul-2015');
+
+update payment set amount_paid=100,current_due=current_due-100,status='paid' where cust_id=101 AND status='unpaid';
+
+
+
+
+--------------------------------------------------------------
+create table CPA(cust_id int ,          
+order_id int,                                          
+service_id int,                                      
+service_start_date date ,                      
+service_end_date date,                       
+status varchar2(1),                          
+);
+
+create table invoice_details(cust_id int,
+invoice_id int,
+bill_run_id int,
+charge_start_date date,
+charge_end_date date,
+service_id int,
+prod_id int,
+amount int,
+bill_gen_date date
+);
+
+create table payment (cust_id int,
+invoice_id int,
+current_bill_amount int,
+past_due int,
+amount_paid int,
+current_due int,
+status varchar2(10),
+bill_gen_date date
+);
+
+         
+select rate into v_rate from product_rates where rate             
+
+select c.rate from customer a, address b, product_rates c where a.billing_address_id=b.address_id and c.product_id='E0001' and a.cust_id=101 and b.state_code=c.state_code;
+
+
+create table customer(cust_id int ,billing_address_id int);
+create table address(address_id int,state_code varchar2(10));
+
+insert into customer values(101,1);
+insert into customer values(102,2);
+insert into customer values(103,3);
+insert into customer values(104,4);
+
+
+insert into address values(1,'NY');
+insert into address values(2,'AL');
+insert into address values(3,'NY');
+insert into address values(4,'AL');
+l
+
+
+
+
+
+ 

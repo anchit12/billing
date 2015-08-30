@@ -1,0 +1,55 @@
+
+create table CPA(cust_id number(10) ,          
+service_id varchar2(1),                                                                       
+service_start_date date ,                      
+service_end_date date,                       
+status varchar2(20),                          
+inst_create_date date);     
+
+
+create table billing_details(cust_id int,
+bill_cycle_number int,
+last_billed_date date
+);
+
+create table billing_cycle(bill_run_id int,
+bill_date date,
+no_of_cust int
+);
+
+create table product_rates1(product_id varchar2(10),
+rate number(10,2),
+rate_start_date date,
+rate_end_date date,
+state_code varchar2(10));
+
+
+create table payment (cust_id int,
+invoice_id int,
+current_bill_amount number(10,2),
+past_due number(10,2),
+amount_paid number(10,2),
+current_due number(10,2),
+status varchar2(10),
+bill_gen_date date,
+bill_pay_date varchar2(10)
+);
+
+
+
+
+create table invoice_details(cust_id number(10),
+invoice_id int,
+bill_run_id int,
+charge_start_date date,
+charge_end_date date,
+service_id varchar2(1),
+prod_id varchar2(10),
+ps_desc varchar2(70),
+ps_quantity int,
+amount number(10,2),
+tax number(10,2),
+spl_prom number(10,2),
+bill_gen_date date,
+finalise varchar2(10)
+);

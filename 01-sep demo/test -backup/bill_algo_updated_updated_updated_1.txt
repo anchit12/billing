@@ -1,0 +1,438 @@
+create or replace procedure generate_bill
+IS
+c_cust_id billing_details.cust_id%type;
+c_last_billed_date billing_details.last_billed_date%type;
+
+c_CPA CPA%rowtype;
+c_product_services product_services1%rowtype;
+seq_invoice_id int;
+v_charge_start_date date;
+v_charge_end_date date;
+v_rate int;
+v_amount number(10,2);
+v_count int;
+v_bill_run_id int;
+actual_csd date;
+actual_ced date;
+csd date;
+ced date;
+v_rend_date date;
+final_v_amount number(10,2);
+
+
+cursor cursor_billing_details is
+SELECT cust_id,last_billed_date FROM billing_details WHERE bill_cycle_number=EXTRACT(day from sysdate)  AND last_billed_date <> trunc(sysdate);
+
+cursor cursor_CPA is
+ SELECT * from CPA WHERE CPA.cust_id = c_cust_id;
+
+cursor cursor_product_services is
+SELECT * from product_services1 where product_services1.customer_id=c_CPA.cust_id AND product_services1.service_id=c_CPA.service_id;
+BEGIN
+select count(*) into v_count from billing_cycle where bill_date=trunc(sysdate);
+if(v_count=0) then
+select count (*) into v_count from billing_details where bill_cycle_number=EXTRACT(day from sysdate);
+INSERT into billing_cycle values(s_bill_run_id.NEXTVAL,
+trunc(sysdate), 
+v_count);
+end if;
+select bill_run_id into v_bill_run_id from billing_cycle where bill_date=trunc(sysdate);
+open cursor_billing_details;
+LOOP
+FETCH cursor_billing_details into c_cust_id,c_last_billed_date;
+EXIT when cursor_billing_details%notfound;
+seq_invoice_id:=s_invoice_id.NEXTVAL;
+
+open cursor_CPA;
+LOOP
+FETCH  cursor_CPA into c_CPA;
+EXIT when  cursor_CPA%notfound;
+
+if((c_CPA.service_start_date<=(trunc(sysdate)-1)) AND (c_CPA.service_end_date>=c_last_billed_date) AND c_CPA.status='Active') then
+
+if(c_CPA.inst_create_date>c_last_billed_date AND c_CPA.service_start_date<c_last_billed_date) then
+v_charge_start_date:=c_CPA.service_start_date;
+else
+v_charge_start_date:=greatest(c_CPA.service_start_date,c_last_billed_date);
+
+end if;
+v_charge_end_date:=least(c_CPA.service_end_date,(trunc(sysdate)-1));
+
+open cursor_product_services;
+
+LOOP
+FETCH cursor_product_services into c_product_services;
+EXIT when cursor_product_services%notfound;
+
+
+actual_ced:=least(v_charge_end_date,c_product_services.product_end_date);
+actual_csd:=greatest(v_charge_start_date,c_product_services.product_start_date);
+
+ced:=actual_ced;
+csd:=actual_csd;
+final_v_amount:=0;
+LOOP
+
+select rate,rate_end_date into v_rate,v_rend_date from product_rates1 a,customer1 b,customer_address1 c where b.customer_id=c_cust_id AND b.billing_address_id=c.address_id AND a.state_code=c.state_code and a.product_id=c_product_services.product_id and  a.rate_start_date<=csd AND a.rate_end_date>=csd;
+
+if(actual_ced>v_rend_date) then 
+ced:=v_rend_date;
+else
+ced:=actual_ced;
+end if;
+
+v_amount:=(v_rate*((to_date(to_char(ced,'yyyy-mm-dd'),'yyyy-mm-dd') - to_date(to_char(csd,'yyyy-mm-dd'),'yyyy-mm-dd'))+1))/30;
+
+final_v_amount:=final_v_amount+v_amount;
+
+if actual_ced<=v_rend_date then
+EXIT;
+end if;
+
+csd:=v_rend_date+1;
+
+end loop;
+
+if(c_product_services.product_start_date<trunc(sysdate)) then
+INSERT into invoice_details values(c_cust_id,
+seq_invoice_id,
+v_bill_run_id,
+actual_csd,
+actual_ced,
+c_CPA.service_id,
+c_product_services.product_id,
+c_product_services.product_description,
+c_product_services.product_quantity,
+ final_v_amount*c_product_services.product_quantity,
+final_v_amount*(0.13)*c_product_services.product_quantity,
+2.5,
+trunc(sysdate),
+'n'
+);
+end if;
+end LOOP;
+
+close cursor_product_services;
+
+end if;
+
+
+
+
+
+end LOOP;
+close cursor_CPA;
+
+update  billing_details
+set last_billed_date =trunc(sysdate)
+where cust_id=c_cust_id;
+end LOOP;
+close cursor_billing_details;
+
+end;
+/
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 											PROCEDURE GENERATE_BILL_FORCE(DATE);
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+create or replace procedure generate_bill_force(sys_date date)
+IS
+c_cust_id billing_details.cust_id%type;
+c_last_billed_date billing_details.last_billed_date%type;
+
+c_CPA CPA%rowtype;
+c_product_services product_services1%rowtype;
+seq_invoice_id int;
+v_charge_start_date date;
+v_charge_end_date date;
+v_rate int;
+v_amount number(10,2);
+v_count int;
+v_bill_run_id int;
+actual_csd date;
+actual_ced date;
+csd date;
+ced date;
+v_rend_date date;
+final_v_amount number(10,2);
+
+
+cursor cursor_billing_details is
+SELECT cust_id,last_billed_date FROM billing_details WHERE bill_cycle_number=EXTRACT(day from sys_date)  AND last_billed_date <> trunc(sys_date);
+
+cursor cursor_CPA is
+ SELECT * from CPA WHERE CPA.cust_id = c_cust_id;
+
+cursor cursor_product_services is
+SELECT * from product_services1 where product_services1.customer_id=c_CPA.cust_id AND product_services1.service_id=c_CPA.service_id;
+BEGIN
+select count(*) into v_count from billing_cycle where bill_date=trunc(sys_date);
+if(v_count=0) then
+select count (*) into v_count from billing_details where bill_cycle_number=EXTRACT(day from sys_date);
+INSERT into billing_cycle values(s_bill_run_id.NEXTVAL,
+trunc(sys_date), 
+v_count);
+end if;
+select bill_run_id into v_bill_run_id from billing_cycle where bill_date=trunc(sys_date);
+open cursor_billing_details;
+LOOP
+FETCH cursor_billing_details into c_cust_id,c_last_billed_date;
+EXIT when cursor_billing_details%notfound;
+seq_invoice_id:=s_invoice_id.NEXTVAL;
+
+open cursor_CPA;
+LOOP
+FETCH  cursor_CPA into c_CPA;
+EXIT when  cursor_CPA%notfound;
+
+if((c_CPA.service_start_date<=(trunc(sys_date)-1)) AND (c_CPA.service_end_date>=c_last_billed_date) AND c_CPA.status='Active') then
+
+if(c_CPA.inst_create_date>c_last_billed_date AND c_CPA.service_start_date<c_last_billed_date) then
+v_charge_start_date:=c_CPA.service_start_date;
+else
+v_charge_start_date:=greatest(c_CPA.service_start_date,c_last_billed_date);
+
+end if;
+v_charge_end_date:=least(c_CPA.service_end_date,(trunc(sys_date)-1));
+
+open cursor_product_services;
+
+LOOP
+FETCH cursor_product_services into c_product_services;
+EXIT when cursor_product_services%notfound;
+
+
+actual_ced:=least(v_charge_end_date,c_product_services.product_end_date);
+actual_csd:=greatest(v_charge_start_date,c_product_services.product_start_date);
+
+ced:=actual_ced;
+csd:=actual_csd;
+final_v_amount:=0;
+LOOP
+
+select rate,rate_end_date into v_rate,v_rend_date from product_rates1 a,customer1 b,customer_address1 c where b.customer_id=c_cust_id AND b.billing_address_id=c.address_id AND a.state_code=c.state_code and a.product_id=c_product_services.product_id and  a.rate_start_date<=csd AND a.rate_end_date>=csd;
+
+if(actual_ced>v_rend_date) then 
+ced:=v_rend_date;
+else
+ced:=actual_ced;
+end if;
+
+v_amount:=(v_rate*((to_date(to_char(ced,'yyyy-mm-dd'),'yyyy-mm-dd') - to_date(to_char(csd,'yyyy-mm-dd'),'yyyy-mm-dd'))+1))/30;
+
+final_v_amount:=final_v_amount+v_amount;
+
+if actual_ced<=v_rend_date then
+EXIT;
+end if;
+
+csd:=v_rend_date+1;
+
+end loop;
+
+if(c_product_services.product_start_date<trunc(sys_date)) then
+INSERT into invoice_details values(c_cust_id,
+seq_invoice_id,
+v_bill_run_id,
+actual_csd,
+actual_ced,
+c_CPA.service_id,
+c_product_services.product_id,
+c_product_services.product_description,
+c_product_services.product_quantity,
+ final_v_amount*c_product_services.product_quantity,
+final_v_amount*(0.13)*c_product_services.product_quantity,
+2.5,
+trunc(sys_date),
+'n'
+);
+end if;
+end LOOP;
+
+close cursor_product_services;
+
+end if;
+
+
+
+
+
+end LOOP;
+close cursor_CPA;
+
+update  billing_details
+set last_billed_date =trunc(sys_date)
+where cust_id=c_cust_id;
+end LOOP;
+close cursor_billing_details;
+
+end;
+/
+
+/
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                                               END PROCEDURE GENERATE_BILL_FORCE(DATE);
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                           PROCEDURE	GENERATE_PAYMENT
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+create or replace procedure generate_payment(sys_date date) is
+c_cust_id invoice_details.cust_id%type;
+c_sumA invoice_details.amount%type;
+c_sumT invoice_details.tax%type;
+c_sumP invoice_details.spl_prom%type;
+c_invoice_id invoice_details.invoice_id%type;
+v_count int;
+v_past_due number(10,2);
+v_invoice_id int;
+cursor cursor_invoice_details is
+select cust_id,sum(amount) ,sum(tax),sum(spl_prom),invoice_id 
+from invoice_details where bill_gen_date=sys_date and finalise='y'
+group by cust_id,invoice_id,finalise; 
+BEGIN
+open cursor_invoice_details;
+LOOP
+FETCH cursor_invoice_details into c_cust_id,c_sumA,c_sumT,c_sumP,c_invoice_id;
+EXIT when cursor_invoice_details%notfound;
+
+select count(*) into v_count from payment where cust_id=c_cust_id; 
+if(v_count>0) then
+select * into v_past_due from (select current_due from payment 
+
+where cust_id=c_cust_id 
+order by bill_gen_date desc) 
+where rownum<=1;
+
+else
+v_past_due:=0; 
+
+end if;
+select count(*) into v_count from payment where cust_id=c_cust_id and bill_gen_date=sys_date;
+if(v_count=0) then 
+select max(invoice_id) into v_invoice_id from payment where cust_id=c_cust_id;
+update  payment set status='dead' where cust_id=c_cust_id AND invoice_id=v_invoice_id;
+
+INSERT into payment values(c_cust_id,
+c_invoice_id,
+(c_sumA+c_sumT-c_sumP),
+v_past_due,
+0,
+(v_past_due +c_sumA+c_sumT-c_sumP),
+'active',
+sys_date,
+'unpaid');
+
+end if;
+
+end loop;
+close cursor_invoice_details;
+end;
+/
+
+-------------------------------------------------------------------------------------------
+create or replace trigger t_update_cpa 
+after update on customer_services1 
+for each row
+
+begin
+
+
+update CPA set service_end_date=(:new.service_effective_date)-1 where cust_id=:new.customer_id and service_id=:new.service_id and service_end_date=:old.service_end_date;
+
+insert into CPA values(:new.customer_id,
+:new.service_id,
+:new.service_effective_date,
+:old.service_end_date,
+:new.service_current_status,
+trunc(sysdate));
+end;
+/
+
+create or replace trigger t_create_cpa 
+after insert on customer_services1
+for each row
+
+declare 
+bcn int;
+v_count int;
+begin
+
+
+insert into CPA values(:new.customer_id,
+:new.service_id,
+:new.service_effective_date,
+:new.service_end_date,
+:new.service_current_status,
+trunc(sysdate));
+
+ bcn:=EXTRACT(day from :new.service_effective_date); 
+
+select count(*) into v_count from billing_details where cust_id=:new.customer_id;
+
+if (v_count=0) then
+
+insert into billing_details values(
+:new.customer_id,
+bcn,
+:new.service_effective_date
+);
+
+end if;
+
+
+end;
+/
+
+
+
+
+
+CREATE SEQUENCE  s_invoice_id
+  MINVALUE 10001
+  MAXVALUE 999999
+  START WITH 10001
+  INCREMENT BY 1;
+
+CREATE SEQUENCE  s_bill_run_id
+  MINVALUE 1000
+  MAXVALUE 999999
+  START WITH 1000
+  INCREMENT BY 1;
+
+create table CPA(cust_id number(10) ,          
+service_id varchar2(1),                                                                       
+service_start_date date ,                      
+service_end_date date,                       
+status varchar2(20),                          
+inst_create_date date);   
+
+                 
+
+create table customer_services(customer_id number(10),
+service_id varchar2(1),
+service_effective_date date,
+service_end_date date,
+service_current_status varchar2(20));
+
+
+
+
+
+
+
+insert into customer_service values(101,'1','12-feb-2015','31-dec-2199','active');
+drop table CPA1;
+drop table customer_service;
+
+
+
+create table billing_details(cust_id number(10),bill_cycle_number int,last_billed_date date);
+
+insert into billing_details values(101,23,'23-jul-2015');
+
+select EXTRACT(day from service_effective_date) from customer_service;
+-----------------------------------------------------------------------------------------------
